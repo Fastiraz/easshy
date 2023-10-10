@@ -11,6 +11,7 @@
 - Edit existing server details.
 - Delete server entries.
 - Connect to SSH servers with optional password or SSH key.
+- Password encryption (coming soon...)
 
 ## Requirements
 
