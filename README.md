@@ -47,6 +47,7 @@ Add-Content -Path $profilePath -Value 'Set-Alias -Name easshy -Value "python3 $e
 
 ## Usage
 
+- Use the `easshy` command.
 - Use the arrow keys to navigate the menu.
 - Press Enter to select an option.
 - You can add new servers, edit existing server details, or delete servers as needed.
