@@ -26,8 +26,22 @@ For Linux and macOS:
 ```bash
 mkdir ~/.easshy
 cd ~/.easshy
-wget https://github.com/Fastiraz/easshy/easshy.py
-echo 'alias easshy="python3 ~/.easshy/easshy.py"'
+wget https://raw.githubusercontent.com/Fastiraz/easshy/main/easshy.py
+wget https://raw.githubusercontent.com/Fastiraz/easshy/main/creds.json
+echo 'alias easshy="python3 ~/.easshy/easshy.py"' >> ~/.bashrc
+source ~/.bashrc  # For linux
+source ~/.zshrc  # For macOS
+```
+
+For Windows:
+```powershell
+New-Item -ItemType Directory -Path $env:USERPROFILE\.easshy
+Set-Location -Path $env:USERPROFILE\.easshy
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/Fastiraz/easshy/main/easshy.py -OutFile easshy.py
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/Fastiraz/easshy/main/creds.json -OutFile creds.json
+$profilePath = $PROFILE.AllUsersAllHosts
+Add-Content -Path $profilePath -Value 'Set-Alias -Name easshy -Value "python3 $env:USERPROFILE\.easshy\easshy.py"'
+. $profilePath
 ```
 
 ## Usage
