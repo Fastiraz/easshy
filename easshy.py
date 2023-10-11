@@ -20,7 +20,7 @@ UP_ARROW = 65
 DOWN_ARROW = 66
 ENTER = 13 #10
 
-CREDS_FILE = "creds.json"
+CREDS_FILE = os.path.expanduser("~/.easshy/creds.json")
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
