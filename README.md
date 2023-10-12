@@ -3,7 +3,11 @@
   <p>EASShY is a simple Python script that allows you to manage your SSH server connections with ease. You can add, edit, delete, and connect to SSH servers using this script. It provides a text-based menu interface for quick and convenient server management.</p>
 </div>
 
-![easshy](./img/easshy.png)
+![easshy](./assets/easshy.png)
+
+## Demo
+
+https://github.com/Fastiraz/easshy/assets/92016718/0fef4358-7e06-41c2-8330-c04b1ebe0ed8
 
 ## Features
 
