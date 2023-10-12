@@ -20,6 +20,7 @@ UP_ARROW = 65
 DOWN_ARROW = 66
 ENTER = 13 #10
 
+#CREDS_FILE = "~/.easshy/creds.json"
 CREDS_FILE = os.path.expanduser("~/.easshy/creds.json")
 
 def clear_screen():
@@ -192,12 +193,14 @@ def menu2(server_id, CREDS_FILE):
                 print("Editing server details...")
                 edit_server(CREDS_FILE, server_id, name, username, ip, port, password, sshkey)
                 time.sleep(2)  # Simulate editing
+                main()
             elif selected_option["name"] == "Delete this server":
                 # Implement your code to delete the server here
                 print("Deleting server...")
                 remove_server(CREDS_FILE, server_id)
                 renew_ids(CREDS_FILE)
                 time.sleep(2)  # Simulate deletion
+                main()
 ################################################################################
 def renew_ids(CREDS_FILE):
     try:
