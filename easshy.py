@@ -4,6 +4,10 @@ import tty
 import termios
 import time
 import json
+import keyboard
+import subprocess
+from cryptography.fernet import Fernet
+import base64
 
 # ANSI color codes
 KNRM = "\x1B[0m"
@@ -20,8 +24,45 @@ UP_ARROW = 65
 DOWN_ARROW = 66
 ENTER = 13 #10
 
-#CREDS_FILE = "~/.easshy/creds.json"
 CREDS_FILE = os.path.expanduser("~/.easshy/creds.json")
+
+class Encrypt:
+    def __init__(self) -> None:
+        #self.KEY_FILE = os.path.expanduser("~/.easshy/4.key")
+        self.KEY_FILE = os.path.expanduser("4.key")
+        self.KEY = None
+        self.load_or_generate_key()
+        # initialize the Fernet class
+        self.fernet = Fernet(self.KEY)
+
+    def write_key(self):
+        self.KEY = Fernet.generate_key()
+        with open(self.KEY_FILE, "wb") as key_file:
+            key_file.write(self.KEY)
+
+    def load_key(self):
+        return open(self.KEY_FILE, "rb").read()
+
+    def load_or_generate_key(self):
+        if os.path.exists(self.KEY_FILE):
+            self.KEY = self.load_key()
+        else:
+            self.write_key()
+
+    def abracadabra(self, passwd):
+        # Ensure a key exists
+        if not self.KEY:
+            self.load_or_generate_key()
+
+        encoded_passwd = passwd.encode()
+
+        # encrypt the message
+        encrypted_passwd = self.fernet.encrypt(encoded_passwd)
+        return encrypted_passwd
+    
+    def decrypt(self, passwd):
+        decrypted_encrypted = self.fernet.decrypt(passwd)
+        return decrypted_encrypted
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -79,6 +120,14 @@ def save_servers(filename, servers):
 def add_server(filename, name, username, ip, port, password, sshkey):
     servers = load_servers(filename)
     new_id = str(len(servers))
+    
+    if password != None:
+        # Password encryption
+        e = Encrypt()
+        encrypted_password = e.abracadabra(password)
+        # Encode the encrypted password to base64 for JSON serialization
+        password = base64.b64encode(encrypted_password).decode()
+
     servers[new_id] = {
         "name": name,
         "username": username,
@@ -115,6 +164,20 @@ def remove_server(filename, server_id):
         print(f"Server '{server_id}' not found.")
 ################################################################################
 ################################################################################
+def autofill_password(password):
+    print('Press [SHIFT] to autofill password.')
+    if keyboard.wait("SHIFT"):
+        keyboard.write(password)
+        time.sleep(1)
+        keyboard.press_and_release("enter")
+    elif keyboard.wait("enter"):
+        pass
+
+def autofill_fingerprint():
+    keyboard.write("yes")
+    time.sleep(1)
+    keyboard.press_and_release("enter")
+
 def menu2(server_id, CREDS_FILE):
     clear_screen()
     print(f"Selected Server ID: {server_id}\n")
@@ -140,23 +203,38 @@ def menu2(server_id, CREDS_FILE):
             if selected_option["name"] == "Back to main menu":
                 return
             elif selected_option["name"] == "Connect to this server":
-                # Implement your code to connect to the server here
-                # You may want to call a separate function to handle the connection.
-                # Load the current server details
                 servers = load_servers(CREDS_FILE)
                 current_server = servers.get(server_id, {})
-                if not current_server.get("password"):
-                    print(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")} -i {current_server.get("sshkey")}')
-                    try:
-                        os.system(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")} -i {current_server.get("sshkey")}')
-                    except:
-                        print('Error while connecting...')
+                
                 if not current_server.get("sshkey"):
-                    print(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")}')
-                    try:
-                        os.system(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")}')
-                    except:
-                        print('Error while connecting...')
+                    e = Encrypt()
+                    password = base64.b64decode(current_server.get("password")).decode()
+                    decrypted_password = str(e.decrypt(password))
+                    print(decrypted_password)
+                    ssh_command = f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")}'
+                else:
+                    ssh_command = f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")} -i {current_server.get("sshkey")}'
+
+                print(ssh_command)
+                try:
+                    # Run the SSH command in a subprocess
+                    proc = subprocess.Popen(ssh_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+                    while True:
+                        output = proc.stdout.readline() #.decode('utf-8')
+                        print(f'Output command: {output}')
+                        if "(yes/no/[fingerprint])?" in output:
+                            print('Fingerprint detected.')
+                            autofill_fingerprint()
+                            time.sleep(1)
+                            autofill_password(current_server.get("password"))
+                            break
+                        elif "password:" in output:
+                            print('Fingerprint not detected.')
+                            autofill_password(current_server.get("password"))
+                            break
+                    time.sleep(1)
+                except Exception as e:
+                    print(f'Error while connecting: {e}')
 
                 print("Connecting to the server...")
                 time.sleep(2)  # Simulate a connection
@@ -223,6 +301,7 @@ def renew_ids(CREDS_FILE):
         print(f"Error: JSON file '{CREDS_FILE}' not found.")
     except json.JSONDecodeError:
         print(f"Error: Invalid JSON format in '{CREDS_FILE}'.")
+
 ################################################################################
 
 def main():
