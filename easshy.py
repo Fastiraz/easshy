@@ -28,8 +28,7 @@ CREDS_FILE = os.path.expanduser("~/.easshy/creds.json")
 
 class Encrypt:
     def __init__(self) -> None:
-        #self.KEY_FILE = os.path.expanduser("~/.easshy/4.key")
-        self.KEY_FILE = os.path.expanduser("4.key")
+        self.KEY_FILE = os.path.expanduser("~/.easshy/4.key")
         self.KEY = None
         self.load_or_generate_key()
         # initialize the Fernet class
@@ -220,7 +219,7 @@ def menu2(server_id, CREDS_FILE):
                     # Run the SSH command in a subprocess
                     proc = subprocess.Popen(ssh_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
                     while True:
-                        output = proc.stdout.readline() #.decode('utf-8')
+                        output = proc.stdout.readline().decode('utf-8')
                         print(f'Output command: {output}')
                         if "(yes/no/[fingerprint])?" in output:
                             print('Fingerprint detected.')
