@@ -82,7 +82,7 @@ def display_menu(choice, options):
     print(f"{KYEL}EASShY{KNRM}\n\n")
     for i, option in enumerate(options):
         if i == choice:
-            print(f"➜ {KMAG}{option['name']}{KNRM}")
+            print(f"\033[36m➜\033[0m {KMAG}{option['name']}{KNRM}")
         else:
             print(f"   {option['name']}")
 
