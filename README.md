@@ -16,6 +16,7 @@ https://github.com/Fastiraz/easshy/assets/92016718/0fef4358-7e06-41c2-8330-c04b1
 - Delete server entries.
 - Connect to SSH servers with optional password or SSH key.
 - Password encryption
+- Password and fingerprint autofill (coming soon...)
 
 ## Requirements
 
