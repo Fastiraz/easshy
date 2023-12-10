@@ -202,41 +202,28 @@ def menu2(server_id, CREDS_FILE):
             if selected_option["name"] == "Back to main menu":
                 return
             elif selected_option["name"] == "Connect to this server":
+                # Implement your code to connect to the server here
+                # You may want to call a separate function to handle the connection.
+                # Load the current server details
                 servers = load_servers(CREDS_FILE)
                 current_server = servers.get(server_id, {})
-                
+                if not current_server.get("password"):
+                    print(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")} -i {current_server.get("sshkey")}')
+                    try:
+                        os.system(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")} -i {current_server.get("sshkey")}')
+                    except:
+                        print('Error while connecting...')
                 if not current_server.get("sshkey"):
                     e = Encrypt()
-                    password = base64.b64decode(current_server.get("password")).decode()
-                    decrypted_password = str(e.decrypt(password))
-                    print(decrypted_password)
-                    ssh_command = f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")}'
-                else:
-                    ssh_command = f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")} -i {current_server.get("sshkey")}'
-
-                print(ssh_command)
-                try:
-                    # Run the SSH command in a subprocess
-                    proc = subprocess.Popen(ssh_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-                    while True:
-                        output = proc.stdout.readline().decode('utf-8')
-                        print(f'Output command: {output}')
-                        if "(yes/no/[fingerprint])?" in output:
-                            print('Fingerprint detected.')
-                            autofill_fingerprint()
-                            time.sleep(1)
-                            autofill_password(current_server.get("password"))
-                            break
-                        elif "password:" in output:
-                            print('Fingerprint not detected.')
-                            autofill_password(current_server.get("password"))
-                            break
-                    time.sleep(1)
-                except Exception as e:
-                    print(f'Error while connecting: {e}')
-
-                print("Connecting to the server...")
-                time.sleep(2)  # Simulate a connection
+                    encrypted_passwd = current_server.get("password")
+                    password = base64.b64decode(encrypted_passwd).decode()
+                    password = e.decrypt(password)
+                    print("Decrypted password: ", password)
+                    print(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")}')
+                    try:
+                        os.system(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")}')
+                    except:
+                        print('Error while connecting...')
             elif selected_option["name"] == "Edit this server":
                 # Load the current server details
                 servers = load_servers(CREDS_FILE)
