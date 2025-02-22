@@ -1,12 +1,15 @@
-# from importlib.metadata import entry_points
 from setuptools import setup, find_packages
+
+with open("README.md", 'r', encoding="utf-8") as f:
+  description = f.read()
 
 setup(
   name="easshy",
-  version="0.1.0",
+  version="0.0.1",
   author="Fastiraz",
   author_email="",
   description="A simple tool that lets you easily manage your SSH servers credentials.",
+  long_description=description,
   long_description_content_type="text/markdown",
   url="https://github.com/Fastiraz/easshy",
   packages=find_packages(where="src"),
@@ -24,8 +27,7 @@ setup(
   python_requires=">=3.10",
   entry_points = {
     "console_scripts": [
-      # "easshy = easshy:easshy"
-      "easshy = easshy.easshy:main"
+      "easshy = easshy.easshy:main",
     ],
   },
 )
