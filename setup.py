@@ -25,7 +25,7 @@ setup(
   entry_points = {
     "console_scripts": [
       # "easshy = easshy:easshy"
-      "easshy = easshy.easshy:easshy"
+      "easshy = easshy.easshy:main"
     ],
   },
 )

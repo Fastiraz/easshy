@@ -1,1 +1,1 @@
-from .easshy import easshy
+from .easshy import main

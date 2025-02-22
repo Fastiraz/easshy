@@ -22,7 +22,7 @@ KWHT = "\x1B[37m"
 # Arrow key codes
 UP_ARROW = 65
 DOWN_ARROW = 66
-ENTER = 13 #10
+ENTER = 13
 
 CREDS_FILE = os.path.expanduser("~/.easshy/creds.json")
 
@@ -31,7 +31,6 @@ class Encrypt:
     self.KEY_FILE = os.path.expanduser("~/.easshy/4.key")
     self.KEY = None
     self.load_or_generate_key()
-    # initialize the Fernet class
     self.fernet = Fernet(self.KEY)
 
   def write_key(self):
@@ -48,26 +47,21 @@ class Encrypt:
     else:
       self.write_key()
 
-  def abracadabra(self, passwd):
-    # Ensure a key exists
+  def encrypt(self, passwd):
     if not self.KEY:
       self.load_or_generate_key()
-
     encoded_passwd = passwd.encode()
-
-    # encrypt the message
     encrypted_passwd = self.fernet.encrypt(encoded_passwd)
     return encrypted_passwd
 
   def decrypt(self, passwd):
-    decrypted_encrypted = self.fernet.decrypt(passwd)
-    return decrypted_encrypted
+    decrypted_passwd = self.fernet.decrypt(passwd)
+    return decrypted_passwd.decode()
 
 def clear_screen():
   os.system('cls' if os.name == 'nt' else 'clear')
 
 def getch():
-  # Get a single character from stdin without waiting for Enter
   fd = sys.stdin.fileno()
   old_settings = termios.tcgetattr(fd)
   try:
@@ -92,19 +86,14 @@ def load_options_from_json(CREDS_FILE):
       options = json.load(file)
       return options
   except FileNotFoundError:
-    print(f"Error: JSON file '{CREDS_FILE}' not found.")
-    # Create the directory and the file if it doesn't exist
     os.makedirs(os.path.dirname(CREDS_FILE), exist_ok=True)
     with open(CREDS_FILE, "w") as file:
-      file.write("{}")  # Initialize with an empty JSON object
-    print(f"Initialized an empty JSON file at '{CREDS_FILE}'.")
-    main()
+      file.write("{}")
+    return {}
   except json.JSONDecodeError:
     print(f"Error: Invalid JSON format in '{CREDS_FILE}'.")
     sys.exit(1)
 
-################################################################################
-# Load the JSON data from a file
 def load_servers(filename):
   try:
     with open(filename, 'r') as file:
@@ -115,23 +104,17 @@ def load_servers(filename):
       json.dump(servers, file)
   return servers
 
-# Save the JSON data to a file
 def save_servers(filename, servers):
   with open(filename, 'w') as file:
     json.dump(servers, file, indent=4)
 
-# Add a new server entry
 def add_server(filename, name, username, ip, port, password, sshkey):
   servers = load_servers(filename)
   new_id = str(len(servers))
-
-  if password != None:
-    # Password encryption
+  if password:
     e = Encrypt()
-    encrypted_password = e.abracadabra(password)
-    # Encode the encrypted password to base64 for JSON serialization
+    encrypted_password = e.encrypt(password)
     password = base64.b64encode(encrypted_password).decode()
-
   servers[new_id] = {
     "name": name,
     "username": username,
@@ -142,10 +125,13 @@ def add_server(filename, name, username, ip, port, password, sshkey):
   }
   save_servers(filename, servers)
 
-# Edit an existing server entry
 def edit_server(filename, server_id, name, username, ip, port, password, sshkey):
   servers = load_servers(filename)
   if server_id in servers:
+    if password:
+      e = Encrypt()
+      encrypted_password = e.encrypt(password)
+      password = base64.b64encode(encrypted_password).decode()
     servers[server_id] = {
       "name": name,
       "username": username,
@@ -158,7 +144,6 @@ def edit_server(filename, server_id, name, username, ip, port, password, sshkey)
   else:
     print(f"Server '{server_id}' not found.")
 
-# Remove an existing server entry
 def remove_server(filename, server_id):
   servers = load_servers(filename)
   if server_id in servers:
@@ -166,139 +151,40 @@ def remove_server(filename, server_id):
     save_servers(filename, servers)
   else:
     print(f"Server '{server_id}' not found.")
-################################################################################
-################################################################################
-def autofill_password(password):
-    print('Press [SHIFT] to autofill password.')
-    if keyboard.wait("SHIFT"):
-      keyboard.write(password)
-      time.sleep(1)
-      keyboard.press_and_release("enter")
-    elif keyboard.wait("enter"):
-      pass
 
-def autofill_fingerprint():
-  keyboard.write("yes")
-  time.sleep(1)
-  keyboard.press_and_release("enter")
-
-def menu2(server_id, CREDS_FILE):
-  clear_screen()
-  print(f"Selected Server ID: {server_id}\n")
-  options = {
-    "connect": {"name": "Connect to this server"},
-    "edit": {"name": "Edit this server"},
-    "delete": {"name": "Delete this server"},
-    "back": {"name": "Back to main menu"}
-  }
-
-  choice = 0
-  option_keys = sorted(options.keys())
-
-  while True:
-    display_menu(choice, [options[key] for key in option_keys])
-    key = ord(getch())
-    if key == UP_ARROW and choice > 0:
-      choice -= 1
-    elif key == DOWN_ARROW and choice < len(options) - 1:
-      choice += 1
-    elif key == ENTER:
-      selected_option = options[option_keys[choice]]
-      if selected_option["name"] == "Back to main menu":
-        return
-      elif selected_option["name"] == "Connect to this server":
-        # Implement your code to connect to the server here
-        # You may want to call a separate function to handle the connection.
-        # Load the current server details
-        servers = load_servers(CREDS_FILE)
-        current_server = servers.get(server_id, {})
-        if not current_server.get("password"):
-          print(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")} -i {current_server.get("sshkey")}')
-          try:
-            os.system(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")} -i {current_server.get("sshkey")}')
-          except:
-            print('Error while connecting...')
-        if not current_server.get("sshkey"):
-          e = Encrypt()
-          encrypted_passwd = current_server.get("password")
-          password = base64.b64decode(encrypted_passwd).decode()
-          password = e.decrypt(password)
-          print("Decrypted password: ", password)
-          print(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")}')
-          try:
-            os.system(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")}')
-          except:
-            print('Error while connecting...')
-      elif selected_option["name"] == "Edit this server":
-        # Load the current server details
-        servers = load_servers(CREDS_FILE)
-        current_server = servers.get(server_id, {})
-
-        clear_screen()
-        print("If you don't want to edit, just press [ENTER]")
-
-        # Prompt for new values, using current values as defaults
-        name = input(f'Enter servers name [{current_server.get("name")}]: ') or current_server.get("name")
-        username = input(f'Enter servers username [{current_server.get("username")}]')
-        ip = input(f'Enter servers IP [{current_server.get("ip")}]: ') or current_server.get("ip")
-        port = input(f'Enter servers port [{current_server.get("port")}]: ') or current_server.get("port")
-        password = input('Enter servers password [**********]: ')
-        sshkey = input(f'Enter servers sshkey path [{current_server.get("sshkey")}]: ')
-
-        # If the user didn't provide a new password or sshkey, use the current ones
-        if not name:
-          name = current_server.get("name")
-        if not username:
-          username = current_server.get("username")
-        if not ip:
-          ip = current_server.get("ip")
-        if not port:
-          port = current_server.get("port")
-        if not password:
-          password = current_server.get("password")
-        if not sshkey:
-          sshkey = current_server.get("sshkey")
-
-        print("Editing server details...")
-        edit_server(CREDS_FILE, server_id, name, username, ip, port, password, sshkey)
-        time.sleep(2)  # Simulate editing
-        main()
-      elif selected_option["name"] == "Delete this server":
-        # Implement your code to delete the server here
-        print("Deleting server...")
-        remove_server(CREDS_FILE, server_id)
-        renew_ids(CREDS_FILE)
-        time.sleep(2)  # Simulate deletion
-        main()
-################################################################################
 def renew_ids(CREDS_FILE):
   try:
     with open(CREDS_FILE, 'r') as file:
       data = json.load(file)
-
-    # Create a new dictionary with consecutive IDs starting from 0
     renewed_data = {}
     new_id = 0
     for old_id, server_data in data.items():
       renewed_data[str(new_id)] = server_data
       new_id += 1
-
-    # Save the renewed data back to the JSON file
     with open(CREDS_FILE, 'w') as file:
       json.dump(renewed_data, file, indent=4)
-
     print(f"Renewed IDs and saved to '{CREDS_FILE}'")
   except FileNotFoundError:
     print(f"Error: JSON file '{CREDS_FILE}' not found.")
   except json.JSONDecodeError:
     print(f"Error: Invalid JSON format in '{CREDS_FILE}'.")
 
-################################################################################
+def autofill_password(password):
+  print('Press [SHIFT] to autofill password.')
+  if keyboard.wait("SHIFT"):
+    keyboard.write(password)
+    time.sleep(1)
+    keyboard.press_and_release("enter")
+  elif keyboard.wait("enter"):
+    pass
+
+def autofill_fingerprint():
+  keyboard.write("yes")
+  time.sleep(1)
+  keyboard.press_and_release("enter")
 
 def main():
   options = load_options_from_json(CREDS_FILE)
-
-  # Add "Add server" and "Quit" options
   options["add_server"] = {"name": "Add server"}
   options["quit"] = {"name": "Quit"}
 
@@ -315,15 +201,15 @@ def main():
     elif key == ENTER:
       selected_option = options[option_keys[choice]]
       if selected_option["name"] == "Quit":
-        sys.exit(0)  # Exit the program
+        sys.exit(0)
       elif selected_option["name"] == "Add server":
         clear_screen()
-        name = input('Enter servers name: ')
-        username = input('Enter servers username: ')
-        ip = input('Enter servers IP: ')
-        port = input('Enter servers port: ')
-        password = input('Enter servers password [IF NOT PRESS ENTER]: ')
-        sshkey = input('Enter servers sshkey path [IF NOT PRESS ENTER]: ')
+        name = input('Enter server name: ')
+        username = input('Enter server username: ')
+        ip = input('Enter server IP: ')
+        port = input('Enter server port: ')
+        password = input('Enter server password [IF NOT PRESS ENTER]: ')
+        sshkey = input('Enter server sshkey path [IF NOT PRESS ENTER]: ')
         if not password:
           password = None
         if not sshkey:
@@ -331,12 +217,61 @@ def main():
         add_server(CREDS_FILE, name, username, ip, port, password, sshkey)
         main()
       else:
-        print("\nSelected Option:")
-        for key, value in selected_option.items():
-          print(f"{key}: {value}")
-        print()
-        menu2(str(choice), CREDS_FILE)
-        time.sleep(1)
+        server_id = option_keys[choice]
+        clear_screen()
+        print(f"Selected Server ID: {server_id}\n")
+        server_options = {
+          "connect": {"name": "Connect to this server"},
+          "edit": {"name": "Edit this server"},
+          "delete": {"name": "Delete this server"},
+          "back": {"name": "Back to main menu"}
+        }
+        server_choice = 0
+        server_option_keys = list(server_options.keys())
+
+        while True:
+          display_menu(server_choice, [server_options[key] for key in server_option_keys])
+          key = ord(getch())
+          if key == UP_ARROW and server_choice > 0:
+            server_choice -= 1
+          elif key == DOWN_ARROW and server_choice < len(server_options) - 1:
+            server_choice += 1
+          elif key == ENTER:
+            selected_server_option = server_options[server_option_keys[server_choice]]
+            if selected_server_option["name"] == "Back to main menu":
+                break
+            elif selected_server_option["name"] == "Connect to this server":
+              servers = load_servers(CREDS_FILE)
+              current_server = servers.get(server_id, {})
+              if not current_server.get("password"):
+                os.system(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")} -i {current_server.get("sshkey")}')
+              else:
+                e = Encrypt()
+                encrypted_passwd = current_server.get("password")
+                password = base64.b64decode(encrypted_passwd).decode()
+                password = e.decrypt(password)
+                os.system(f'ssh {current_server.get("username")}@{current_server.get("ip")} -p {current_server.get("port")}')
+            elif selected_server_option["name"] == "Edit this server":
+              servers = load_servers(CREDS_FILE)
+              current_server = servers.get(server_id, {})
+              clear_screen()
+              print("If you don't want to edit, just press [ENTER]")
+              name = input(f'Enter server name [{current_server.get("name")}]: ') or current_server.get("name")
+              username = input(f'Enter server username [{current_server.get("username")}]: ') or current_server.get("username")
+              ip = input(f'Enter server IP [{current_server.get("ip")}]: ') or current_server.get("ip")
+              port = input(f'Enter server port [{current_server.get("port")}]: ') or current_server.get("port")
+              password = input('Enter server password [**********]: ')
+              sshkey = input(f'Enter server sshkey path [{current_server.get("sshkey")}]: ')
+              if not password:
+                password = current_server.get("password")
+              if not sshkey:
+                sshkey = current_server.get("sshkey")
+              edit_server(CREDS_FILE, server_id, name, username, ip, port, password, sshkey)
+              main()
+            elif selected_server_option["name"] == "Delete this server":
+              remove_server(CREDS_FILE, server_id)
+              renew_ids(CREDS_FILE)
+              main()
 
 if __name__ == "__main__":
   main()
