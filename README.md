@@ -3,7 +3,7 @@
   <p>EASShY is a simple Python script that allows you to manage your SSH server connections with ease. You can add, edit, delete, and connect to SSH servers using this script. It provides a text-based menu interface for quick and convenient server management.</p>
 </div>
 
-![easshy](./img/easshy.png)
+![easshy](https://raw.githubusercontent.com/Fastiraz/easshy/refs/heads/main/img/easshy.png)
 
 ## Demo
 
@@ -30,19 +30,7 @@ https://github.com/Fastiraz/easshy/assets/92016718/0fef4358-7e06-41c2-8330-c04b1
 
 For Linux and macOS:
 ```bash
-mkdir ~/.easshy
-
-cd ~/.easshy
-
-wget https://raw.githubusercontent.com/Fastiraz/easshy/main/easshy.py
-
-wget https://raw.githubusercontent.com/Fastiraz/easshy/main/creds.json
-
-echo 'alias easshy="python3 ~/.easshy/easshy.py"' >> ~/.bashrc
-
-source ~/.bashrc  # For linux
-
-source ~/.zshrc  # For macOS
+pipx install easshy
 ```
 
 ## Usage
