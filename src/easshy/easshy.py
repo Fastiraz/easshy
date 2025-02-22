@@ -58,7 +58,7 @@ class Encrypt:
         # encrypt the message
         encrypted_passwd = self.fernet.encrypt(encoded_passwd)
         return encrypted_passwd
-    
+
     def decrypt(self, passwd):
         decrypted_encrypted = self.fernet.decrypt(passwd)
         return decrypted_encrypted
@@ -119,7 +119,7 @@ def save_servers(filename, servers):
 def add_server(filename, name, username, ip, port, password, sshkey):
     servers = load_servers(filename)
     new_id = str(len(servers))
-    
+
     if password != None:
         # Password encryption
         e = Encrypt()
@@ -270,18 +270,18 @@ def renew_ids(CREDS_FILE):
     try:
         with open(CREDS_FILE, 'r') as file:
             data = json.load(file)
-        
+
         # Create a new dictionary with consecutive IDs starting from 0
         renewed_data = {}
         new_id = 0
         for old_id, server_data in data.items():
             renewed_data[str(new_id)] = server_data
             new_id += 1
-        
+
         # Save the renewed data back to the JSON file
         with open(CREDS_FILE, 'w') as file:
             json.dump(renewed_data, file, indent=4)
-        
+
         print(f"Renewed IDs and saved to '{CREDS_FILE}'")
     except FileNotFoundError:
         print(f"Error: JSON file '{CREDS_FILE}' not found.")
@@ -290,7 +290,7 @@ def renew_ids(CREDS_FILE):
 
 ################################################################################
 
-def main():
+def easshy():
     options = load_options_from_json(CREDS_FILE)
 
     # Add "Add server" and "Quit" options
@@ -334,4 +334,4 @@ def main():
                 time.sleep(1)
 
 if __name__ == "__main__":
-    main()
+    easshy()

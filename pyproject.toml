@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=65.5.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "easshy"
+version = "0.0.1"
+authors = [
+  { name = "Fastiraz" },
+]
+maintainers = [
+  { name = "Fastiraz" }
+]
+description = "A simple tool that lets you easily manage your SSH servers credentials."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Development Status :: 2 - Pre-Alpha",
+  "Topic :: Security :: Cryptography",
+  "Environment :: Console",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: Unix",
+  "Operating System :: MacOS",
+  "Programming Language :: Python :: 3",
+]
+keywords = ["ssh", "credential", "manager", "cryptography"]
+
+[project.urls]
+Homepage = "https://github.com/Fastiraz/easshy"
+Issues = "https://github.com/Fastiraz/easshy/issues"
